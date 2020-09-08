@@ -1,3 +1,21 @@
+##' A function used to check if a vector of proportions is valid
+##'
+##' @title valid_proportions
+##' @param x numeric
+##' @param tolerance a tolerance value
+##' @return logical
+valid_proportions <- function(x, tolerance = 1e-7) {
+    stopifnot(is.numeric(x))
+
+    if(any(x > 1 | x < 0)) {
+        return(FALSE)
+    }
+    if(any(abs(sum(x) - 1) > tolerance)) {
+        return(FALSE)
+    }
+    TRUE
+}
+
 ##' A function to generate some synthetic data based on a few
 ##' parameters.
 ##'
@@ -13,7 +31,7 @@
 ##' @param n_animal_urg The number of animal level risk groups
 ##' @param animal_dist The fraction of animals within herds that are
 ##'     part of each risk group
-##' @param animal_samp_frac The total samplign fraction of animals
+##' @param animal_samp_frac The total sampling fraction of animals
 ##'     within herds
 ##' @param animal_samp_dist The fraction of samples that are collected
 ##'     from each animal risk group
@@ -27,7 +45,7 @@
 ##' ## data.frame with a herd identifier (ppn), a herd level unit risk
 ##' ## group identifier (herd_urg), a animal level unit risk group
 ##' ## identifier (animal_urg), the total number of animals in the unit
-##' ## risk group (N_animal_urg) and the numner of animals tested in the
+##' ## risk group (N_animal_urg) and the number of animals tested in the
 ##' ## unit risk group (n_animals_urg).
 ##'
 ##' df <- sample_data()
@@ -59,20 +77,21 @@ sample_data <- function(nherds = 500,
         stop("The length of the animal sample distribution vector must be equal to the number of animal unit risk groups")
     }
 
-    if(sum(herd_dist) != 1) {
-        stop("The distribution of herds between the herd unit risk groups must sum to 1")
+    if(!valid_proportions(herd_dist)) {
+        stop("The distribution of herds between the herd unit risk groups must be between 0 and 1 and must sum to 1")
     }
 
-    if(sum(herd_samp_dist) != 1) {
-        stop("The distribution of herd SAMPLES between the herd unit risk groups must sum to 1")
+    if(!valid_proportions(herd_samp_dist)) {
+        stop("The distribution of herd SAMPLES between the herd unit risk groups must be between 0 and 1 and must sum to 1")
     }
 
-    if(sum(animal_dist) != 1) {
-        stop("The distribution of animals between the animal unit risk groups must sum to 1")
+
+    if(!valid_proportions(animal_dist)){
+        stop("The distribution of animals between the animal unit risk groups must be between 0 and 1 and sum to 1")
     }
 
-    if(sum(animal_samp_dist) != 1) {
-        stop("The distribution of animal SAMPLES between the animal unit risk groups must sum to 1")
+    if(!valid_proportions(animal_samp_dist)) {
+        stop("The distribution of animal SAMPLES between the animal unit risk groups must be between 0 and 1 and sum to 1")
     }
 
     if(!is.null(seed)) {
@@ -123,8 +142,10 @@ sample_data <- function(nherds = 500,
         df$N_animal_urg <- N_animal_urg
         df$n_animal_urg <- n_sample_animal_urg
 
-        return(df)
+        df
     }))
 
-    subset(herds, select = -c(sample, N, n))
+    herds <- subset(herds, select = -c(sample, N, n))
+    rownames(herds) <- NULL
+    herds
 }

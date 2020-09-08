@@ -1,6 +1,6 @@
 Package: freedom
 Title: Demonstration of Disease Freedom (DDF)
-Version: 1.0
+Version: 1.0.1
 Authors@R: person("Thomas", "Rosendal", role = c("aut", "cre"),
                   email = "trosendal@gmail.com",
                   comment = c(ORCID = "0000-0002-6576-9668"))
@@ -17,12 +17,12 @@ Type: Package
 LazyLoad: yes
 VignetteBuilder: knitr
 Suggests: knitr, rmarkdown
-Depends: R (>= 4.0)
+Depends: R (>= 3.6)
 Encoding: UTF-8
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-08-28 12:46:20 UTC; trosendal
+Packaged: 2020-09-05 18:41:36 UTC; trosendal
 Author: Thomas Rosendal [aut, cre] (<https://orcid.org/0000-0002-6576-9668>)
 Maintainer: Thomas Rosendal <trosendal@gmail.com>
 Repository: CRAN
-Date/Publication: 2020-09-02 08:50:03 UTC
+Date/Publication: 2020-09-08 12:40:08 UTC
