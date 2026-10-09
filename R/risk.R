@@ -36,20 +36,28 @@
 ##'                              c(1, 2.3))
 adjusted_risk <- function(prop, RR) {
 
+    if (length(RR) < 2) {
+        stop(paste("We expect at least 2 unit risk groups (URG). ie the",
+             "length of the vector arguments should be > 1"))
+    }
+
     if (length(prop) != length(RR)) {
-        stop("The length of the proportions vector must be equal to the length of the RR vector")
+        stop(paste("The length of the proportions vector must be equal",
+             "to the length of the RR vector"))
     }
 
     if (RR[1] != 1) {
-        stop("The relative risk of the first URG must be 1. This is the referent group")
+        stop(paste("The relative risk of the first URG must be 1.",
+             "This is the referent group"))
     }
 
     if (!valid_proportions(prop)) {
-        stop("The proportion vector must sum to 1 and each value between 0 and 1")
+        stop(paste("The proportion vector must sum to 1",
+                   "and each value between 0 and 1"))
     }
 
     unlist(
-        lapply(seq_len(length(prop)), function(x){
+        lapply(seq_len(length(prop)), function(x) {
             RR[x] / sum(RR * prop)
         })
     )
@@ -93,14 +101,15 @@ adjusted_risk <- function(prop, RR) {
 ##' EPHI <- EffProbInf(0.05, AR)
 EffProbInf <- function(dp, AR) {
 
-    if (!(length(dp) == 1 | length(dp) == length(AR))) {
-        stop("The design prevalence (dp) vector must be length 1 or be equal in length to the AR vector")
+    if (!(length(dp) == 1 || length(dp) == length(AR))) {
+        stop(paste("The design prevalence (dp) vector must be length 1",
+             "or be equal in length to the AR vector"))
     }
 
     epi <- dp * AR
 
-    if(any(epi >=1)){
-        warning(paste(c("The EPI should not be greater than 1 for any URG.",
+    if (any(epi >= 1)) {
+        warning(paste(c("The EPI should not be greater than 1 for any URG. ",
                         "Consider your choices of design prevalence and the",
                         "relative risks of the URG"), sep = "\n"))
     }

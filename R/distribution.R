@@ -8,7 +8,6 @@
 ##' @param x.max The maximum value in the sample
 ##' @param x.mode The mode of the sample
 ##' @param lambda lambda
-##' @import stats
 ##' @return a numeric vector of length n
 ##' @export
 ##' @examples
@@ -17,7 +16,6 @@
 ##' samples <- rpert(10000, 2, 5, 4)
 ##' hist(samples)
 ##'
-##' ## Generate a
 rpert <- function(n,
                   x.min,
                   x.max,
@@ -36,14 +34,13 @@ rpert <- function(n,
     mu <- (x.min + x.max + lambda * x.mode) / (lambda + 2)
 
     ## special case if mu == mode
-    if (mu == x.mode) {
+    if (abs(mu - x.mode) < 1e-7) {
         v <- (lambda / 2) + 1
-    }
-    else {
+    } else {
         v <- ((mu - x.min) * (2 * x.mode - x.min - x.max)) /
             ((x.mode - mu) * (x.max - x.min))
     }
 
     w <- (v * (x.max - mu)) / (mu - x.min)
-    return (rbeta(n, v, w) * x.range + x.min)
+    stats::rbeta(n, v, w) * x.range + x.min
 }

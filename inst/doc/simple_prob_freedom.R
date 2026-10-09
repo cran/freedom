@@ -1,4 +1,4 @@
-## ---- echo = TRUE, eval = TRUE, message = FALSE, results = 'hide'-------------
+## ----echo = TRUE, eval = TRUE, message = FALSE, results = 'hide'--------------
 library(freedom)
 
 Hse <- rep(0.2, 500)
@@ -6,7 +6,7 @@ dp <- rep(0.01, 500)
 SysSe <- sysse(dp, Hse)
 
 
-## ---- echo = TRUE, eval = TRUE, message = FALSE, results = 'hide'-------------
+## ----echo = TRUE, eval = TRUE, message = FALSE, results = 'hide'--------------
 prior_pr <- 0.5
 prob_intro <- 0.01
 
@@ -29,7 +29,7 @@ for (i in seq(2, nrow(pr_free))) {
 }
 
 
-## ---- echo = TRUE, eval = TRUE, message = FALSE-------------------------------
+## ----echo = TRUE, eval = TRUE, message = FALSE--------------------------------
 pr_free
 plot(x = pr_free$year,
      y = pr_free$post_fr,

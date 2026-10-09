@@ -7,10 +7,10 @@
 valid_proportions <- function(x, tolerance = 1e-7) {
     stopifnot(is.numeric(x))
 
-    if(any(x > 1 | x < 0)) {
+    if (any(x > 1 | x < 0)) {
         return(FALSE)
     }
-    if(any(abs(sum(x) - 1) > tolerance)) {
+    if (any(abs(sum(x) - 1) > tolerance)) {
         return(FALSE)
     }
     TRUE
@@ -38,7 +38,6 @@ valid_proportions <- function(x, tolerance = 1e-7) {
 ##' @param seed The seed for the random number generator. Default is a
 ##'     random seed
 ##' @return A data.frame
-##' @import stats
 ##' @export
 ##' @examples
 ##' ## Generate the default example data. This will generate a
@@ -61,46 +60,54 @@ sample_data <- function(nherds = 500,
                         animal_samp_dist = c(0.5, 0.5),
                         seed = NULL) {
 
-    if(length(herd_dist) != n_herd_urg) {
-        stop("The length of the herd distribution vector must be equal to the number of herd unit risk groups")
+    if (length(herd_dist) != n_herd_urg) {
+        stop(paste("The length of the herd distribution vector must",
+                   "be equal to the number of herd unit risk groups"))
     }
 
-    if(length(herd_samp_dist) != n_herd_urg) {
-        stop("The length of the herd sample distribution vector must be equal to the number of herd unit risk groups")
+    if (length(herd_samp_dist) != n_herd_urg) {
+        stop(paste("The length of the herd sample distribution vector",
+                   "must be equal to the number of herd unit risk groups"))
     }
 
-    if(length(animal_dist) != n_animal_urg) {
-        stop("The length of the animal distribution vector must be equal to the number of animal unit risk groups")
+    if (length(animal_dist) != n_animal_urg) {
+        stop(paste("The length of the animal distribution vector must",
+                   "be equal to the number of animal unit risk groups"))
     }
 
-    if(length(animal_samp_dist) != n_animal_urg) {
-        stop("The length of the animal sample distribution vector must be equal to the number of animal unit risk groups")
+    if (length(animal_samp_dist) != n_animal_urg) {
+        stop(paste("The length of the animal sample distribution vector",
+                   "must be equal to the number of animal unit risk groups"))
     }
 
-    if(!valid_proportions(herd_dist)) {
-        stop("The distribution of herds between the herd unit risk groups must be between 0 and 1 and must sum to 1")
+    if (!valid_proportions(herd_dist)) {
+        stop(paste("The distribution of herds between the herd unit risk",
+                   "groups must be between 0 and 1 and must sum to 1"))
     }
 
-    if(!valid_proportions(herd_samp_dist)) {
-        stop("The distribution of herd SAMPLES between the herd unit risk groups must be between 0 and 1 and must sum to 1")
+    if (!valid_proportions(herd_samp_dist)) {
+        stop(paste("The distribution of herd SAMPLES between the herd unit",
+                   "risk groups must be between 0 and 1 and must sum to 1"))
     }
 
 
-    if(!valid_proportions(animal_dist)){
-        stop("The distribution of animals between the animal unit risk groups must be between 0 and 1 and sum to 1")
+    if (!valid_proportions(animal_dist)) {
+        stop(paste("The distribution of animals between the animal unit risk",
+                   "groups must be between 0 and 1 and sum to 1"))
     }
 
-    if(!valid_proportions(animal_samp_dist)) {
-        stop("The distribution of animal SAMPLES between the animal unit risk groups must be between 0 and 1 and sum to 1")
+    if (!valid_proportions(animal_samp_dist)) {
+        stop(paste("The distribution of animal SAMPLES between the animal unit",
+                   "risk groups must be between 0 and 1 and sum to 1"))
     }
 
-    if(!is.null(seed)) {
+    if (!is.null(seed)) {
         set.seed(seed)
     }
 
     ppn <- 1:nherds
-    N <- rpois(nherds, mean_herd_size)
-    n <- floor((rpois(nherds, animal_samp_frac * 100) / 100) * N)
+    N <- stats::rpois(nherds, mean_herd_size)
+    n <- floor((stats::rpois(nherds, animal_samp_frac * 100) / 100) * N)
     herd_urg <- sample(x = factor(seq_len(n_herd_urg)),
                        size = nherds,
                        replace = TRUE,
@@ -108,8 +115,10 @@ sample_data <- function(nherds = 500,
     herds <- data.frame(ppn, N, n, herd_urg,
                         stringsAsFactors = FALSE)
     herds <- do.call("rbind", lapply(seq_len(n_herd_urg), function(x) {
-        df <- herds[herds$herd_urg == x,]
-        df$sample <- sample(c(0, 1), nrow(df), replace = TRUE, prob = c(1 - herd_samp_dist[x], herd_samp_dist[x]))
+        df <- herds[herds$herd_urg == x, ]
+        df$sample <- sample(c(0, 1), nrow(df),
+                            replace = TRUE,
+                            prob = c(1 - herd_samp_dist[x], herd_samp_dist[x]))
         return(df)
     }))
 
@@ -117,25 +126,27 @@ sample_data <- function(nherds = 500,
 
     herds <- do.call("rbind", lapply(ppn, function(x) {
 
-        df <- herds[ppn == x,]
+        df <- herds[ppn == x, ]
 
         N_animal_urg <- as.vector(table(sample(x = seq_len(n_animal_urg),
                                size = df$N,
                                replace = TRUE,
                                prob = animal_dist)))
 
-        n_sample_animal_urg <- as.vector(table(factor(sample(x = seq_len(n_animal_urg),
-                               size = df$n,
-                               replace = TRUE,
-                               prob = animal_samp_dist), levels = seq_len(n_animal_urg))))
+        n_sample_animal_urg <- as.vector(table(factor(sample(
+                x = seq_len(n_animal_urg),
+                size = df$n,
+                replace = TRUE,
+                prob = animal_samp_dist),
+            levels = seq_len(n_animal_urg))))
 
         index <- n_sample_animal_urg > N_animal_urg
         if (any(index)) {
             n_sample_animal_urg[index] <- N_animal_urg[index]
         }
 
-        for(i in seq_len(n_animal_urg - 1)) {
-            df <- rbind(df, herds[ppn == x,])
+        for (i in seq_len(n_animal_urg - 1)) {
+            df <- rbind(df, herds[ppn == x, ])
         }
 
         df$animal_urg <- seq_len(n_animal_urg)

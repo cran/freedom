@@ -18,10 +18,11 @@
 ##' ## Calculate the posterior probability of freedom after applying a
 ##' #sensitivity to a prior probability of freedom:
 ##' post_pf <- post_fr(0.5, 0.4)
-post_fr <- function(prior_fr, Se){
+post_fr <- function(prior_fr, Se) {
 
     if (any(prior_fr > 1 | prior_fr < 0)) {
-        stop("The prior probability of freedom cannot be greater than 1 or less than 0")
+        stop(paste("The prior probability of freedom cannot be",
+             "greater than 1 or less than 0"))
     }
 
     if (any(Se > 1 | Se < 0)) {
@@ -52,13 +53,15 @@ post_fr <- function(prior_fr, Se){
 ##' ## posterior probability of freedom to calculate the subsequent
 ##' ## prior probability of freedom for the next time step:
 ##' prior_pf <- prior_fr(post_pf, 0.05)
-prior_fr <- function(post_fr, intro){
+prior_fr <- function(post_fr, intro) {
     if (any(post_fr > 1 | post_fr < 0)) {
-        stop("The posterior probability of freedom cannot be greater than 1 or less than 0")
+        stop(paste("The posterior probability of freedom",
+                   "cannot be greater than 1 or less than 0"))
     }
 
     if (any(intro > 1 | intro < 0)) {
-        stop("The annual probability of introduction cannot be greater than 1 or less than 0")
+        stop(paste("The annual probability of introduction",
+                   "cannot be greater than 1 or less than 0"))
     }
 
     post_fr - (post_fr * intro)

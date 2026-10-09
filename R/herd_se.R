@@ -18,7 +18,15 @@
 ##'     all URG and herds have the same dp. It could alternatively be
 ##'     length(dp) == length(n_tested) if different design prevalences
 ##'     are to be applied to each URG.
-##' @return A data.frame. A dataframe is returned with 2 columns: "id" and HSe
+##' @param rounding How should the proportion of animals be rounded?
+##'     Default value is 'none' which does no rounding. Other options
+##'     are 'round', 'ceiling', and 'floor'. 'round' rounds the dp * N
+##'     to the nearest integer and then selects 1 if the value is
+##'     0. 'ceiling' takes the ceiling of dp * N, this is consistent
+##'     with the method in the Rsurveillance package. 'floor' takes
+##'     the floor of dp * N and makes it 1 if the result is 0.
+##' @return A data.frame. A dataframe is returned with 2 columns: "id"
+##'     and HSe
 ##' @export
 ##' @examples
 ##' df <- data.frame(id = seq(1:20),
@@ -36,32 +44,53 @@ hse_finite <- function(id,
                        n_tested,
                        N,
                        test_Se,
-                       dp) {
+                       dp,
+                       rounding = c("none", "ceiling", "round", "floor")) {
+
+    rounding <- match.arg(rounding)
 
     if (length(n_tested) != length(N)) {
-        stop(paste("The length of the n_tested vector must be equal to the N vector.",
-                   "ie. you must describe both the number of animals tested in each",
-                   "group as well as how many animals are in each group.",
-                   sep = "\n"))
+        stop(paste("The length of the n_tested vector must be equal to the N",
+                   "vector. ie. you must describe both the number of animals",
+                   "tested in each group as well as how many animals are in",
+                   "each group.", sep = "\n"))
     }
 
     if (any(n_tested > N)) {
         stop("One of the URG has more subunits tested than in the population")
     }
 
-    if (!(length(dp) == 1 | length(n_tested) == length(dp))) {
-        stop(paste("The length of the n_tested vector must be equal to the dp vector.",
-                   "ie. you must describe both the number of animals tested in each",
-                   "group as well as the dp in each group.", sep = "\n"))
+    if (!(length(dp) == 1 || length(n_tested) == length(dp))) {
+        stop(paste("The length of the n_tested vector must be equal to",
+                   "the dp vector. ie. you must describe both the number of",
+                   "animals tested in each group as well as the dp in",
+                   "each group.", sep = "\n"))
     }
 
-    if(!(length(test_Se) == 1 | length(test_Se) == length(n_tested))) {
+    if (!(length(test_Se) == 1 || length(test_Se) == length(n_tested))) {
         stop("The length of test_Se must be either 1 or the length of n_tested")
+    }
+
+    if (!(length(id) == length(n_tested))) {
+        stop(paste("Argument id (grouping variable) should be",
+                   "the same length as n_tested"))
     }
 
     A <- 1 - (n_tested * test_Se / N)
 
     B <- dp * N
+
+    if (rounding == "round") {
+        B <- pmax(round(dp * N), 1)
+    }
+
+    if (rounding == "ceiling") {
+        B <- ceiling(dp * N)
+    }
+
+    if (rounding == "floor") {
+        B <- pmax(floor(dp * N), 1)
+    }
 
     df <- as.data.frame(1 - tapply(A ^ B, INDEX = id, FUN = "prod"))
 
@@ -69,7 +98,7 @@ hse_finite <- function(id,
 
     df$id <- rownames(df)
 
-    df[,c("id", "HSe")]
+    df[, c("id", "HSe")]
 }
 
 ##' Herd Sensitivity calculated with the assumption of an infinite
@@ -110,13 +139,19 @@ hse_infinite <- function(id,
                          dp) {
 
     if (!(length(n_tested) == length(dp) || length(dp) == 1)) {
-        stop(paste("The length of the n_tested vector must be equal to the dp vector.",
-                   "ie. you must describe both the number of animals tested in each",
-                   "group as well as the dp in each group."), sep = "\n")
+        stop(paste("The length of the n_tested vector must be",
+                   "equal to the dp vector. ie. you must describe",
+                   "both the number of animals tested in each group",
+                   "as well as the dp in each group.", sep = "\n"))
     }
 
     if (!(length(n_tested) == length(test_Se) || length(test_Se) == 1)) {
         stop("Length of test_Se must be 1 or the length of n_tested")
+    }
+
+    if (!(length(id) == length(n_tested))) {
+        stop(paste("Argument id (grouping variable) should be the same",
+                   "length as n_tested"))
     }
 
     A <- 1 - (dp * test_Se)
@@ -127,7 +162,7 @@ hse_infinite <- function(id,
 
     df$id <- rownames(df)
 
-    df[,c("id", "HSe")]
+    df[, c("id", "HSe")]
 }
 
 ##' Herd Sensitivity
@@ -155,6 +190,14 @@ hse_infinite <- function(id,
 ##'     that if > 10% of animals are tested in a herd the finite
 ##'     population will be assumed; less than or equal to 10%, the
 ##'     infinite population will be assumed.
+##' @param rounding How should the proportion of animals be rounded?
+##'     Default value is 'none' which does no rounding. Other options
+##'     are 'round', 'ceiling', and 'floor'. 'round' rounds the dp * N
+##'     to the nearest integer and then selects 1 if the value is
+##'     0. 'ceiling' takes the ceiling of dp * N, this is consistent
+##'     with the method in the Rsurveillance package. 'floor' takes
+##'     the floor of dp * N and makes it 1 if the result is 0.
+##' @return A data.frame. A dataframe is returned with 2 columns: "id"
 ##' @param force If force = FALSE (default) then the function errors
 ##'     if n>N. If force = TRUE then this is allowed and uses the
 ##'     hse_infinite to calculate HSe.
@@ -182,24 +225,25 @@ hse <- function(id,
                 test_Se,
                 dp,
                 threshold = 0.1,
+                rounding = c("none", "ceiling", "round", "floor"),
                 force = FALSE) {
 
     ## Ratio of animals tested in the herds
     ratio <- n_tested / N
 
     ## Check if this is more than expected
-    if (any(ratio > 1) & !force) {
+    if (any(ratio > 1) && !force) {
         problem <- id[ratio > 1]
         stop(paste("Greater than 100% of animals cannot be tested.",
                    "This occurs in the following ids:",
                    paste(problem, collapse = ", "),
-                   "To ignore this an default to infinite population",
+                   "To ignore this and default to infinite population",
                    "for these herds, set force = TRUE", sep = "\n"))
     }
 
     ## Use the finite calculation for those with more than the threshold
     finite <- NULL
-    index_finite <- (ratio > threshold) & (ratio < 1)
+    index_finite <- (ratio > threshold) & (ratio <= 1)
     test_Se_finite <- test_Se
     if (length(test_Se) > 1) {
         test_Se_finite <- test_Se[index_finite]
@@ -213,10 +257,11 @@ hse <- function(id,
                              n_tested[index_finite],
                              N[index_finite],
                              test_Se_finite,
-                             dp_finite)
+                             dp_finite,
+                             rounding = rounding)
         finite$method <- "finite"
     }
-    if(all(index_finite)) {
+    if (all(index_finite)) {
         return(finite)
     }
 
@@ -246,11 +291,13 @@ hse <- function(id,
 ##'
 ##' Takes a vector of the sensitivity of herds tested in the
 ##' surveillance system and a vector of the effective probability of
-##' infection in the herds (EPIH) to calculate the total surveillance system
-##' sensitivity for the entire program.
+##' infection in the herds (EPIH) to calculate the total surveillance
+##' system sensitivity for the entire program.
 ##' @title sysse
-##' @param dp The vector of EPIH for all herds tested in the surveillance system
-##' @param hse The calculated hse for all the herds tested in the surveillance system
+##' @param dp The vector of EPIH for all herds tested in the
+##'     surveillance system
+##' @param hse The calculated hse for all the herds tested in the
+##'     surveillance system
 ##' @return A vector (length 1)
 ##' @export
 ##' @examples
@@ -284,7 +331,7 @@ sysse <- function(dp, hse) {
         stop("At least one of the hse values is greater than 1 or less than 0")
     }
     if (any(dp > 1 | dp < 0)) {
-        stop(paste(c("At least one effective probability of infection (dp)",
+        stop(paste(c("At least one effective probability of infection (dp) ",
                      "is greater than 1 or less than 0"), sep = "\n"))
     }
     1 - prod(1 - dp * hse)
@@ -338,7 +385,7 @@ sysse_finite <- function(dp, hse, N) {
         stop("At least one of the hse values is greater than 1 or less than 0")
     }
     if (any(dp > 1 | dp < 0)) {
-        stop(paste(c("At least one effective probability of infection (dp)",
+        stop(paste(c("At least one effective probability of infection (dp) ",
                      "is greater than 1 or less than 0"), sep = "\n"))
     }
     1 - prod((1 - hse / N) ^ (dp * N))

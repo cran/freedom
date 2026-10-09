@@ -1,5 +1,6 @@
-[![Build Status](https://travis-ci.org/SVA-SE/freedom.svg?branch=master)](https://travis-ci.org/SVA-SE/freedom)
+[![Build Status](https://github.com/SVA-SE/freedom/actions/workflows/r.yml/badge.svg)](https://github.com/SVA-SE/freedom/actions/workflows/r.yml)
 [![CRAN status](https://www.r-pkg.org/badges/version/freedom)](https://CRAN.R-project.org/package=freedom)
+[![Code coverage](https://codecov.io/gh/SVA-SE/freedom/branch/main/graph/badge.svg)](https://app.codecov.io/gh/SVA-SE/freedom)
 
 # freedom
 
@@ -17,7 +18,7 @@ trade relationships as well as trade restrictions to avoid future
 introductions.
 
 These calculations have been successfully done in @risk software which
-is add-on toolset to the Microsoft Excel spreadsheet programme. In
+is an add-on toolset to the Microsoft Excel spreadsheet programme. In
 order to make these calculations more reproducible and based on openly
 available tools that are tailored to our needs, this package has been
 produced in R. The vision is ultimately to have an adaptable tool that
